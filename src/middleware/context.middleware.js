@@ -10,7 +10,7 @@ import { createBouncer } from './bouncer.js';
  * Usage in routes:
  *   group.use(authMiddleware).use(contextMiddleware)
  */
-export const contextMiddleware = new Elysia({ name: 'context' })
+export const contextMiddleware = (app) => app
   .derive(({ userId, set }) => ({
     bouncer:    createBouncer(userId),
     serializer: createSerializer(set),
@@ -31,6 +31,6 @@ export const contextMiddleware = new Elysia({ name: 'context' })
  * @returns {Elysia}
  */
 export function withService(serviceInstance) {
-  return new Elysia({ name: `service:${serviceInstance.constructor?.name || 'anon'}` })
+  return new Elysia()
     .derive(() => ({ service: serviceInstance }));
 }

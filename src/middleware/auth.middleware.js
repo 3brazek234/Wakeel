@@ -9,13 +9,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
  *  2. Derives `userId` from the Authorization Bearer token
  *  3. Rejects with 401 if no valid token is present
  */
-export const authMiddleware = new Elysia({ name: 'auth-middleware' })
-  .use(
-    jwt({
-      name: 'jwt',
-      secret: JWT_SECRET,
-    })
-  )
+export const authMiddleware = (app) => app
   .derive(async ({ jwt, headers, set }) => {
     const auth = headers['authorization'];
     if (!auth || !auth.startsWith('Bearer ')) {

@@ -34,10 +34,10 @@ export function registerJobRoutes(app) {
         }
       })
 
-      // ── GET /jobs/:id ──
-      .get('/:id', async ({ params, set }) => {
+      // ── GET /jobs/:jobId ──
+      .get('/:jobId', async ({ params, set }) => {
         try {
-          const job = await jobsService.getById(params.id);
+          const job = await jobsService.getById(params.jobId);
           return { error: false, data: job };
         } catch (e) {
           set.status = e.status || 500;
@@ -45,10 +45,10 @@ export function registerJobRoutes(app) {
         }
       })
 
-      // ── PATCH /jobs/:id/status ──
-      .patch('/:id/status', async ({ params, body, userId, set }) => {
+      // ── PATCH /jobs/:jobId/status ──
+      .patch('/:jobId/status', async ({ params, body, userId, set }) => {
         try {
-          const job = await jobsService.updateStatus(params.id, userId, body.status);
+          const job = await jobsService.updateStatus(params.jobId, userId, body.status);
           return { error: false, data: job };
         } catch (e) {
           set.status = e.status || 500;
@@ -56,10 +56,10 @@ export function registerJobRoutes(app) {
         }
       })
 
-      // ── DELETE /jobs/:id ──
-      .delete('/:id', async ({ params, userId, set }) => {
+      // ── DELETE /jobs/:jobId ──
+      .delete('/:jobId', async ({ params, userId, set }) => {
         try {
-          await jobsService.deleteJob(params.id, userId);
+          await jobsService.deleteJob(params.jobId, userId);
           return { error: false, message: 'Job deleted' };
         } catch (e) {
           set.status = e.status || 500;
