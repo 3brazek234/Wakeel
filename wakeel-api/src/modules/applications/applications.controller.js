@@ -1,22 +1,14 @@
-import { applicationsService } from './applications.service.js';
-
 export const applicationsController = {
   /**
    * POST /jobs/:jobId/applications
    * Protected — apply to a job.
    */
-  async apply({ params, body, userId, set }) {
+  async apply({ params, body, userId, service, serializer }) {
     try {
-      const application = await applicationsService.apply(
-        params.jobId,
-        userId,
-        body?.cover_note,
-      );
-      set.status = 201;
-      return { error: false, data: application };
+      const application = await service.apply(params.jobId, userId, body?.cover_note);
+      return serializer.created(application);
     } catch (e) {
-      set.status = e.status || 500;
-      return { error: true, message: e.message, code: e.code || 'INTERNAL_ERROR' };
+      return serializer.error(e);
     }
   },
 
@@ -24,13 +16,12 @@ export const applicationsController = {
    * GET /jobs/:jobId/applications
    * Protected (poster only) — list applications for a job.
    */
-  async list({ params, userId, set }) {
+  async list({ params, userId, bouncer, service, serializer }) {
     try {
-      const apps = await applicationsService.listForJob(params.jobId, userId);
-      return { error: false, data: apps };
+      const apps = await service.listForJob(params.jobId, userId);
+      return serializer.success(apps);
     } catch (e) {
-      set.status = e.status || 500;
-      return { error: true, message: e.message, code: e.code || 'INTERNAL_ERROR' };
+      return serializer.error(e);
     }
   },
 
@@ -38,13 +29,12 @@ export const applicationsController = {
    * PATCH /jobs/:jobId/applications/:id/accept
    * Protected (poster only) — accept an application, auto-reject others.
    */
-  async accept({ params, userId, set }) {
+  async accept({ params, userId, service, serializer }) {
     try {
-      const app = await applicationsService.accept(params.jobId, params.id, userId);
-      return { error: false, data: app };
+      const app = await service.accept(params.jobId, params.id, userId);
+      return serializer.success(app);
     } catch (e) {
-      set.status = e.status || 500;
-      return { error: true, message: e.message, code: e.code || 'INTERNAL_ERROR' };
+      return serializer.error(e);
     }
   },
 
@@ -52,13 +42,12 @@ export const applicationsController = {
    * PATCH /jobs/:jobId/applications/:id/reject
    * Protected (poster only) — reject an application.
    */
-  async reject({ params, userId, set }) {
+  async reject({ params, userId, service, serializer }) {
     try {
-      const app = await applicationsService.reject(params.jobId, params.id, userId);
-      return { error: false, data: app };
+      const app = await service.reject(params.jobId, params.id, userId);
+      return serializer.success(app);
     } catch (e) {
-      set.status = e.status || 500;
-      return { error: true, message: e.message, code: e.code || 'INTERNAL_ERROR' };
+      return serializer.error(e);
     }
   },
 };
