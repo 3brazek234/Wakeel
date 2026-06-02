@@ -1,38 +1,39 @@
 import { describe, it, expect, mock } from 'bun:test';
 
 // Mock socket.io Server class
-mock.module('socket.io', {
-  Server: class FakeServer {
-    constructor(opts) {
-      this.opts = opts;
-      this.attached = false;
+mock.module('socket.io', () => {
+  return {
+    Server: class FakeServer {
+      constructor(opts) {
+        this.opts = opts;
+        this.bound = false;
+      }
+      bind(engine) {
+        this.bound = true;
+        this.engine = engine;
+      }
+      on() {}
+      to() { return this; }
+      emit() {}
     }
-    attach(engine) {
-      this.attached = true;
-      this.engine = engine;
-    }
-    on() {}
-    to() { return this; }
-    emit() {}
-  }
+  };
 });
 
 import { initSocket, getIO } from './socket.service.js';
 
 describe('socket.service singleton', () => {
-  it('initializes and attaches to engine when engine.attach exists', () => {
-    const engine = { attachCalled: false, attach(io) { this.attachCalled = true; this.io = io; } };
+  it('initializes and binds to engine', () => {
+    const engine = { isFakeEngine: true };
     const io = initSocket(engine, { path: '/socket.io' });
     expect(io).toBeTruthy();
-    // engine.attach should have been called
-    expect(engine.attachCalled).toBe(true);
+    // io.bind should have been called
+    expect(io.bound).toBe(true);
+    expect(io.engine).toBe(engine);
     // getIO returns same instance
     expect(getIO()).toBe(io);
   });
 
-  it('getIO throws if not initialized (fresh import scenario)', () => {
-    // To simulate uninitialized state we cannot unload module easily here,
-    // but at minimum ensure getIO returns an object when initialized above.
+  it('getIO returns the initialized instance', () => {
     expect(typeof getIO()).toBe('object');
   });
 });
