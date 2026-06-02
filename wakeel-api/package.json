@@ -1,0 +1,26 @@
+{
+  "name": "wakeel-api",
+  "version": "0.1.0",
+  "module": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "dev":           "bun run --watch src/index.js",
+    "start":         "bun run src/index.js",
+    "test":          "bun test",
+    "test:watch":    "bun test --watch",
+    "test:coverage": "bun test --coverage",
+    "migrate:up":    "node-pg-migrate up",
+    "migrate:create": "node-pg-migrate create"
+  },
+  "dependencies": {
+    "elysia":               "^1.2.0",
+    "@elysiajs/jwt":        "^1.2.0",
+    "@elysiajs/cors":       "^1.2.0",
+    "elysia-rate-limit":    "^4.0.0",
+    "pg":                   "^8.13.0"
+  },
+  "devDependencies": {
+    "node-pg-migrate": "^7.7.0",
+    "@types/pg":       "^8.11.0"
+  }
+}

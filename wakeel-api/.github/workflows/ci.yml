@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push: {}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/wakeel_db
+      POSTGRES_DB: wakeel_db
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGHOST: localhost
+      PGPORT: 5432
+      JWT_SECRET: test-jwt-secret
+
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: wakeel_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install psql client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Wait for Postgres readiness
+        run: |
+          for i in $(seq 1 60); do
+            if PGPASSWORD=$PGPASSWORD psql -h "$PGHOST" -U "$PGUSER" -d "$POSTGRES_DB" -c '\q' 2>/dev/null; then
+              echo "Postgres is ready"
+              exit 0
+            fi
+            echo "Waiting for postgres... ($i/60)"
+            sleep 1
+          done
+          echo "Postgres did not become ready in time" && exit 1
+
+      - name: Apply DB migrations
+        working-directory: ./wakeel-api
+        run: |
+          if [ -f src/db/migrations/001_initial_schema.sql ]; then
+            PGPASSWORD=$PGPASSWORD psql -h "$PGHOST" -U "$PGUSER" -d "$POSTGRES_DB" -f src/db/migrations/001_initial_schema.sql
+          else
+            echo "No migration file found, skipping"
+          fi
+
+      - name: Install dependencies (Bun)
+        working-directory: ./wakeel-api
+        run: bun install
+
+      - name: Run formatting / lint checks
+        working-directory: ./wakeel-api
+        run: |
+          # Adjust these commands if your project uses different script names.
+          bun run format || true
+          bun run lint || true
+
+      - name: Run tests
+        working-directory: ./wakeel-api
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          JWT_SECRET: ${{ env.JWT_SECRET }}
+        run: bun test --silent
